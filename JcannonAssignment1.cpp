@@ -15,6 +15,7 @@ using std::endl;
 int gold = 150;
 string intent = "";
 string input = "";
+string newItem = "";
 
 // Struct for items
 struct Item {
@@ -102,23 +103,35 @@ void displayPlayerInventory() {
 
 // Handle purchasing items
 int purchaseItem(const string& input) {
-    while (true) {  
-        bool found = false;  // Track if item was found
+    while (true) {
+        bool found = false;
         for (auto& item : items) {
             if (input == item.name) {
                 found = true;
-                if (gold < item.price) {
+                cout << "How many would you like to purchase?\n";
+                int quantity;
+                cin >> quantity;
+
+                // Validate quantity
+                if (quantity <= 0) {
+                    cout << "Please enter a positive number!\n";
+                    return 0;
+                }
+
+                int totalCost = item.price * quantity;
+
+                if (gold < totalCost) {
                     cout << "Not enough gold!\n";
                     return 0;
                 }
 
-                if (item.quantity <= 0) {
-                    cout << "Sold out!\n";
+                if (item.quantity < quantity) {
+                    cout << "Not enough stock available!\n";
                     return 0;
                 }
 
-                gold -= item.price;
-                item.quantity--;
+                gold -= totalCost;
+                item.quantity -= quantity;
 
                 // Check if the item already exists in the inventory
                 auto invIter = std::find_if(inventory.begin(), inventory.end(), [&](const Item& invItem) {
@@ -126,25 +139,27 @@ int purchaseItem(const string& input) {
                     });
 
                 if (invIter != inventory.end()) {
-                    invIter->quantity++;
+                    invIter->quantity += quantity;
                 }
                 else {
-                    inventory.push_back({ item.name, item.price, 1 }); // Add new item to inventory
+                    inventory.push_back({ item.name, item.price, quantity }); // Add new item to inventory
                 }
 
-                cout << "You have purchased a " << item.name << "!\n";
+                cout << "You have purchased " << quantity << " " << item.name << "s!\n";
 
                 // Ask if they want to purchase more
                 string again;
-                string input;
+                string newItem;
                 cout << "Would you like to purchase anything else? (yes/no)\n";
                 cin >> again;
+
                 system("cls");
 
                 if (again == "yes") {
                     cout << "What would you like to purchase?\n";
                     displayShopInventory();
-                    cin >> input;  
+                    cin >> newItem;
+                    return purchaseItem(newItem); // this should hopefully allow for a proper return to the start of the loop
                 }
                 else {
                     return 1;  // Exit the purchase loop
@@ -162,28 +177,35 @@ int purchaseItem(const string& input) {
 
 // Handle selling items
 int sellItem(const string& input) {
-    while (true) { 
-        bool found = false; 
+    while (true) {
+        bool found = false;
         for (const auto& item : items) {
             if (input == item.name) {
                 found = true;
-                cout << "You would like to sell your " << item.name << "? That will be " << item.price << " gold.\n\n";
+                cout << "How many would you like to sell?\n";
+                int quantity;
+                cin >> quantity;
 
-                
+                // Validate quantity
+                if (quantity <= 0) {
+                    cout << "Please enter a positive number!\n";
+                    return 0;
+                }
+
                 auto invIter = std::find_if(inventory.begin(), inventory.end(), [&](const Item& invItem) {
                     return invItem.name == item.name;
                     });
 
-                if (invIter != inventory.end() && invIter->quantity > 0) {
-                    gold += item.price;
-                    invIter->quantity--;
+                if (invIter != inventory.end() && invIter->quantity >= quantity) {
+                    gold += item.price * quantity;
+                    invIter->quantity -= quantity;
 
                     auto shopIter = std::find_if(items.begin(), items.end(), [&](const Item& shopItem) {
                         return shopItem.name == item.name;
                         });
 
                     if (shopIter != items.end()) {
-                        shopIter->quantity++;
+                        shopIter->quantity += quantity;
                     }
 
                     // If quantity drops to 0, remove the item from inventory
@@ -191,35 +213,38 @@ int sellItem(const string& input) {
                         inventory.erase(invIter);
                     }
 
-                    cout << "You have successfully sold a " << item.name << "!\n";
+                    cout << "You have successfully sold " << quantity << " " << item.name << "s!\n";
 
                     // Ask if they want to sell more
                     string again;
-                    string input;
+                    string newItem;
                     cout << "Would you like to sell anything else? (yes/no)\n";
                     cin >> again;
+
                     system("cls");
 
                     if (again == "yes") {
                         cout << "What would you like to sell?\n";
                         displayPlayerInventory();
-                        cin >> input; // Get new input for the next sell
+                        cin >> newItem; // Get new input for the next sell
                     }
                     else {
-                        return 1; 
+                        return 1;
                     }
 
-                    break; 
+                    break;
                 }
                 else {
-                    cout << "You don't have a " << item.name << "\n";
+                    cout << "You don't have enough " << item.name << "\n";
+                    system("pause");
                     return 0;
                 }
             }
         }
         if (!found) {
             cout << input << " is not a valid option!\n";
-            return 0; 
+            system("pause");
+            return 0;
         }
     }
 }
