@@ -64,8 +64,10 @@ int main() {
             cout << "What would you like to purchase?\n";
             displayShopInventory();
             string input;
+            cout << "Type the whole word: ";
             cin >> input;
             purchaseItem(input);
+            system("pause");
             system("cls");
         }
         else if (intent == "sell") {
@@ -73,8 +75,10 @@ int main() {
             cout << "What would you like to sell?\n";
             displayPlayerInventory();
             string input;
+            cout << "Type the whole word: ";
             cin >> input;
             sellItem(input);
+            system("pause");
             system("cls");
         }
         else {
